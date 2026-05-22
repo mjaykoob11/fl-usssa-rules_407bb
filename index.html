@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FL USSSA Baseball Rules Assistant · 10U–13U</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #050d1a 0%, #0a1628 40%, #0d1f3c 100%);
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #dde8f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* HEADER */
+  #header {
+    width: 100%;
+    background: linear-gradient(90deg, #0a1628, #1a3a5c, #0a1628);
+    border-bottom: 2px solid #c8a84b;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  #header .icon { font-size: 32px; filter: drop-shadow(0 0 8px rgba(200,168,75,0.6)); }
+  #header .title { color: #c8a84b; font-size: 18px; font-weight: bold; letter-spacing: 0.05em; text-transform: uppercase; }
+  #header .subtitle { color: #7da8cc; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  /* CONTROLS */
+  #controls {
+    width: 100%; max-width: 760px;
+    padding: 14px 16px 0;
+  }
+  .control-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .control-label { color: #7da8cc; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .pill-btn {
+    padding: 5px 14px; border-radius: 20px;
+    border: 1px solid rgba(200,168,75,0.3);
+    background: transparent; color: #7da8cc;
+    font-size: 13px; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .pill-btn:hover, .pill-btn.active {
+    background: rgba(200,168,75,0.2);
+    border-color: #c8a84b; color: #c8a84b; font-weight: bold;
+  }
+  .clear-btn {
+    background: none; border: none; color: #4a6a8a;
+    font-size: 12px; cursor: pointer; padding: 4px 8px; font-family: inherit;
+  }
+  .config-note { color: #4a6a8a; font-size: 11px; }
+
+  /* TOPIC GRID */
+  #topics {
+    width: 100%; max-width: 760px;
+    padding: 12px 16px 0;
+  }
+  #topics h3 {
+    color: #7da8cc; font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+  }
+  .topic-btn {
+    padding: 8px 12px; border-radius: 10px;
+    border: 1px solid rgba(200,168,75,0.2);
+    background: rgba(255,255,255,0.03);
+    color: #aac4d8; font-size: 12px; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+    text-align: left; line-height: 1.4;
+  }
+  .topic-btn:hover {
+    background: rgba(200,168,75,0.1);
+    border-color: rgba(200,168,75,0.5);
+    color: #dde8f0;
+  }
+
+  /* CHAT */
+  #chat {
+    width: 100%; max-width: 760px;
+    flex: 1; overflow-y: auto;
+    padding: 20px 16px;
+    min-height: 300px;
+  }
+  .bubble-wrap {
+    display: flex; margin-bottom: 16px;
+    animation: fadeIn 0.3s ease;
+  }
+  .bubble-wrap.user { justify-content: flex-end; }
+  .avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #1a3a5c, #c8a84b);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; margin-right: 10px; flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .bubble {
+    max-width: 82%;
+    padding: 12px 16px;
+    font-size: 14px; line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .bubble.bot {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(200,168,75,0.2);
+    border-radius: 18px 18px 18px 4px;
+    color: #dde8f0;
+  }
+  .bubble.user {
+    background: linear-gradient(135deg, #1a3a5c, #0f2340);
+    border-radius: 18px 18px 4px 18px;
+    color: #e8d9a0;
+    box-shadow: 0 2px 12px rgba(26,58,92,0.4);
+  }
+  .rule-ref {
+    display: block; margin-top: 8px;
+    color: #7da8cc; font-size: 12px; font-style: italic;
+  }
+  .fl-tag { color: #c8a84b; font-weight: bold; }
+  .nat-tag { color: #7da8cc; font-weight: bold; }
+  .divider { border: none; border-top: 1px solid rgba(200,168,75,0.15); margin: 8px 0; }
+
+  /* CONFIG PROMPT BUTTONS */
+  .config-choice {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .config-choice button {
+    padding: 10px 24px; border-radius: 24px;
+    border: 2px solid #c8a84b;
+    background: rgba(200,168,75,0.1);
+    color: #c8a84b; font-size: 15px; cursor: pointer;
+    font-family: inherit; transition: all 0.2s; font-weight: bold;
+  }
+  .config-choice button:hover { background: rgba(200,168,75,0.25); }
+
+  /* INPUT */
+  #input-area {
+    width: 100%; max-width: 760px;
+    padding: 12px 16px 20px;
+    border-top: 1px solid rgba(200,168,75,0.15);
+  }
+  .input-box {
+    display: flex; gap: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(200,168,75,0.25);
+    border-radius: 16px; padding: 10px 14px;
+    align-items: flex-end;
+  }
+  textarea {
+    flex: 1; background: transparent; border: none;
+    color: #dde8f0; font-size: 14px; font-family: inherit;
+    line-height: 1.5; resize: none; max-height: 120px;
+    overflow-y: auto;
+  }
+  textarea:focus { outline: none; }
+  textarea::placeholder { color: #3a5a7a; }
+  #send-btn {
+    padding: 8px 18px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #c8a84b, #a07830);
+    color: #0a1628; font-size: 14px; cursor: pointer;
+    font-weight: bold; transition: all 0.2s; font-family: inherit;
+    flex-shrink: 0;
+  }
+  #send-btn:disabled {
+    background: rgba(200,168,75,0.2); color: #7a6a3a; cursor: not-allowed;
+  }
+  #send-btn:not(:disabled):hover { opacity: 0.9; transform: scale(1.03); }
+  .footer-note {
+    text-align: center; margin-top: 8px;
+    color: #3a5a7a; font-size: 11px; letter-spacing: 0.05em;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: rgba(200,168,75,0.3); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <div class="icon">⚾</div>
+  <div>
+    <div class="title">Florida USSSA Baseball</div>
+    <div class="subtitle">Rules Assistant · 10U–13U</div>
+  </div>
+</div>
+
+<!-- DIVISION / CONFIG CONTROLS -->
+<div id="controls">
+  <div class="control-row">
+    <span class="control-label">Division:</span>
+    <button class="pill-btn" onclick="selectDivision('10U')">10U</button>
+    <button class="pill-btn" onclick="selectDivision('11U')">11U</button>
+    <button class="pill-btn" onclick="selectDivision('12U')">12U</button>
+    <button class="pill-btn" onclick="selectDivision('13U')">13U</button>
+    <button class="clear-btn" onclick="clearDivision()">✕ clear</button>
+  </div>
+  <div class="control-row" id="config-row" style="display:none;">
+    <span class="control-label">Field Config:</span>
+    <button class="pill-btn" onclick="selectConfig('54/80')">54/80</button>
+    <button class="pill-btn" onclick="selectConfig('60/90')">60/90</button>
+    <span class="config-note">(optional — only needed for field dimension questions)</span>
+  </div>
+</div>
+
+<!-- TOPIC QUICK-ACCESS -->
+<div id="topics">
+  <h3>Quick Topics</h3>
+  <div class="topic-grid">
+    <button class="topic-btn" onclick="quickAsk('pitching limits')">⚾ Pitching Limits</button>
+    <button class="topic-btn" onclick="quickAsk('field dimensions')">📐 Field Dimensions</button>
+    <button class="topic-btn" onclick="quickAsk('bat rules')">🏏 Bat Rules</button>
+    <button class="topic-btn" onclick="quickAsk('guest players')">👤 Guest Players</button>
+    <button class="topic-btn" onclick="quickAsk('player eligibility age')">📋 Player Eligibility</button>
+    <button class="topic-btn" onclick="quickAsk('mercy rules')">🏁 Mercy Rules</button>
+    <button class="topic-btn" onclick="quickAsk('time limits')">⏱ Time Limits</button>
+    <button class="topic-btn" onclick="quickAsk('cleats')">👟 Cleats</button>
+    <button class="topic-btn" onclick="quickAsk('roster rules')">📝 Roster Rules</button>
+    <button class="topic-btn" onclick="quickAsk('ejections')">🚫 Ejections</button>
+    <button class="topic-btn" onclick="quickAsk('protests')">📣 Protests</button>
+    <button class="topic-btn" onclick="quickAsk('weather refund policy')">🌧 Weather/Refunds</button>
+    <button class="topic-btn" onclick="quickAsk('tied games tiebreaker')">🔄 Tie Games</button>
+    <button class="topic-btn" onclick="quickAsk('catcher equipment')">🥎 Catcher Gear</button>
+    <button class="topic-btn" onclick="quickAsk('grade exceptions')">🎓 Grade Exceptions</button>
+    <button class="topic-btn" onclick="quickAsk('classifications')">🏆 Classifications</button>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chat"></div>
+
+<!-- INPUT -->
+<div id="input-area">
+  <div class="input-box">
+    <textarea id="msg-input" rows="1" placeholder="Select a division above, then ask your question..."
+      oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+    <button id="send-btn" onclick="handleSend()" disabled>Send</button>
+  </div>
+  <div class="footer-note">Always verify edge cases with your Tournament Director · flbaseball.usssa.com</div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let division = null;
+let fieldConfig = null;
+let awaitingConfig = false;
+let pendingQuery = null;
+
+// ─── RULES KNOWLEDGE BASE ─────────────────────────────────────────────────────
+const RULES = {
+
+  pitching: {
+    keywords: ['pitch','pitching','innings','mound','rest','arm','throw','threw','limit','days'],
+    answer(div) {
+      const base = `<strong>Pitching Limits</strong>\n\n`;
+      const allAges = `<strong>Mandatory Rest Rules (All Ages):</strong>\n• Throw more than 3 innings in one day → must rest the next day\n• Throw 8 innings over 2 consecutive days → must rest the next day\n• Pitch 3 consecutive days (any amount) → must rest the next day\n\n<strong>How to count:</strong> 1 out = ⅓ inning. A pitcher who records zero outs is not charged any innings.\n\n<em>Outs recorded in a forfeited game still count toward limits.</em>`;
+
+      if (div === '13U') {
+        return base +
+          `<span class="fl-tag">🌴 Florida / National USSSA Rules:</span>\n• Max innings in one day (to still pitch next day): <strong>3 innings</strong>\n• Max innings in one day total: <strong>7 innings</strong>\n• Max innings over 3 consecutive days: <strong>8 innings</strong>\n\n` +
+          allAges + `\n\n<span class="rule-ref">Rule 7.05.B, Chart 7.05.B-1, Florida State Rules</span>`;
+      } else if (div) {
+        return base +
+          `<span class="fl-tag">🌴 Florida / National USSSA Rules (${div}):</span>\n• Max innings in one day (to still pitch next day): <strong>3 innings</strong>\n• Max innings in one day total: <strong>6 innings</strong>\n• Max innings over 3 consecutive days: <strong>8 innings</strong>\n\n` +
+          allAges + `\n\n<span class="rule-ref">Rule 7.05.B, Chart 7.05.B-1, Florida State Rules</span>`;
+      } else {
+        return base +
+          `<strong>10U / 11U / 12U:</strong>\n• Max per day (still pitch next day): 3 innings\n• Max per day total: 6 innings\n• Max over 3 consecutive days: 8 innings\n\n<strong>13U:</strong>\n• Max per day (still pitch next day): 3 innings\n• Max per day total: 7 innings\n• Max over 3 consecutive days: 8 innings\n\n` +
+          allAges + `\n\n<span class="rule-ref">Rule 7.05.B, Chart 7.05.B-1</span>`;
+      }
+    }
+  },
+
+  dimensions: {
+    keywords: ['dimension','field','base path','pitching distance','fence','mound','feet','distance','layout','measurement','bases','how far','how long','yardage'],
+    requiresConfig: true,
+    answer(div, config) {
+      if (!div) return `Please select a division first using the buttons above.`;
+      if (div === '13U' && !config) return `__NEEDS_CONFIG__`;
+
+      const data = {
+        '10U':    { bases: "65'", pitch: "46'", foul: "180'", cf: "210'" },
+        '11U':    { bases: "70'", pitch: "50'", foul: "230'", cf: "275'" },
+        '12U':    { bases: "70'", pitch: "50'", foul: "230'", cf: "275'" },
+        '13U-54/80': { bases: "80'", pitch: "54'", foul: "275'", cf: "300'" },
+        '13U-60/90': { bases: "90'", pitch: "60'6\"", foul: "320'", cf: "375'" },
+      };
+      const key = div === '13U' ? `13U-${config}` : div;
+      const d = data[key];
+      return `<strong>Field Dimensions — ${div}${div==='13U'?' ('+config+')':''}</strong>\n\n• Base paths: <strong>${d.bases}</strong>\n• Pitching distance: <strong>${d.pitch}</strong>\n• Fence at foul lines: <strong>${d.foul}</strong>\n• Fence at center field: <strong>${d.cf}</strong>\n\n<span class="rule-ref">Chart 7.01.A-1</span>`;
+    }
+  },
+
+  bats: {
+    keywords: ['bat','bpf','bbcor','drop','wood','stamp','illegal bat','bat rule','bat standard','usa bat'],
+    answer(div) {
+      const base = `<strong>Bat Rules</strong>\n\n`;
+      const penalty = `\n<strong>Violations:</strong>\n• 1st offense: Defensive team chooses result of play OR batter called out with runners returning\n• 2nd offense: Manager ejected + 1st offense penalty\n\n<span class="rule-ref">Rules 7.01.C, 7.01.C.1, 7.01.D</span>`;
+
+      if (!div || div === '10U' || div === '11U' || div === '12U') {
+        const divLabel = div || '10U / 11U / 12U';
+        return base + `<span class="fl-tag">🌴 Florida / National USSSA Rules (${divLabel}):</span>\nBat must have one of:\n• USSSA 1.15 BPF stamp (permanently marked)\n• BBCOR .50 certified stamp\n• Wood bat from a licensed USSSA manufacturer\n• USA Baseball logo bat (legal except where BBCOR is required)` + penalty;
+      }
+      if (div === '13U') {
+        return base + `<span class="fl-tag">🌴 Florida / National USSSA Rules (13U):</span>\n• Maximum <strong>drop 8 (-8)</strong> bat with official USSSA 1.15 BPF stamp\n• USA Baseball logo bats are legal EXCEPT where BBCOR is required\n\n<em>⚠️ Exception: In Elite World Series, 13U Majors must use drop 5 (-5), BBCOR, or wood bats only.</em>` + penalty;
+      }
+    }
+  },
+
+  cleats: {
+    keywords: ['cleat','spike','metal','shoe','footwear'],
+    answer(div) {
+      if (!div) return `<strong>Cleats</strong>\n\n• <strong>10U, 11U, 12U:</strong> Non-metal cleats ONLY. No metal spikes.\n• <strong>13U:</strong> Traditional metal baseball spikes ARE permitted.\n\n<span class="rule-ref">Rule 7.01.F</span>`;
+      if (div === '13U') return `<strong>Cleats — 13U</strong>\n\nMetal baseball spikes <strong>ARE permitted</strong> at 13U.\n\n<span class="rule-ref">Rule 7.01.F</span>`;
+      return `<strong>Cleats — ${div}</strong>\n\n<strong>Non-metal cleats only.</strong> No metal spikes allowed.\n\n<span class="rule-ref">Rule 7.01.F</span>`;
+    }
+  },
+
+  mercy: {
+    keywords: ['mercy','run rule','run differential','blow out','blowout','skunk','end early'],
+    answer(div) {
+      const is13 = div === '13U';
+      const fl = is13
+        ? `<span class="fl-tag">🌴 Florida USSSA Rules (13U):</span>\n• 15-run lead after 3 innings → game over\n• 12-run lead after 4 innings → game over\n• 8-run lead after 5 innings → game over`
+        : `<span class="fl-tag">🌴 Florida USSSA Rules (10U–12U):</span>\n• 15-run lead after 3 innings → game over\n• 8-run lead after 4 innings → game over`;
+      const nat = is13
+        ? `<span class="nat-tag">📋 National USSSA Rules (7-inning game):</span>\nSame as Florida.`
+        : `<span class="nat-tag">📋 National USSSA Rules (6-inning game):</span>\nSame as Florida.`;
+      return `<strong>Mercy Rules${div?' — '+div:''}</strong>\n\n${fl}\n\n${nat}\n\n<em>Note: These match — Florida and National rules are the same for these divisions.</em>\n\n<span class="rule-ref">Chart 7.03.B-1, Florida USSSA State Rules</span>`;
+    }
+  },
+
+  timelimits: {
+    keywords: ['time limit','time limit','clock','how long','game length','how many innings','inning limit'],
+    answer(div) {
+      return `<strong>Time Limits</strong>\n\n<span class="fl-tag">🌴 Florida USSSA Rules:</span>\n• 9U–12U: <strong>1 hour 40 minutes</strong>\n• 13U–18U: <strong>1 hour 45 minutes</strong>\n\n<strong>Championship Game Time Limits (Florida):</strong>\n• 9U–12U: 2 hours\n• 13U–14U: 2 hours 10 minutes\n\n<span class="nat-tag">📋 National USSSA Rules:</span>\nTime limits may be used with approval of the League/Tournament/State Director. No specific times set nationally.\n\n<em>All time limits can be modified by the Tournament Director.</em>\n\n<span class="rule-ref">Rules 7.02.B, 7.02.C, Florida USSSA State Rules</span>`;
+    }
+  },
+
+  innings: {
+    keywords: ['how many inning','regulation game','official game','complete game','inning'],
+    answer(div) {
+      if (div === '13U') return `<strong>Game Length — 13U</strong>\n\nA regulation game is <strong>7 innings</strong>.\n\n<em>Rain/weather rule: Official if 4 full innings played, OR if the home team leads after 3½ innings.</em>\n\n<span class="rule-ref">Rule 7.03.A, Rule 7.03.C.2</span>`;
+      if (div) return `<strong>Game Length — ${div}</strong>\n\nA regulation game is <strong>6 innings</strong>.\n\n<em>Rain/weather rule: Official if 3 full innings played, OR if the home team leads after 2½ innings.</em>\n\n<span class="rule-ref">Rule 7.03.A, Rule 7.03.C.1</span>`;
+      return `<strong>Game Length</strong>\n\n• <strong>10U, 11U, 12U:</strong> 6-inning regulation game\n• <strong>13U:</strong> 7-inning regulation game\n\n<span class="rule-ref">Rule 7.03.A</span>`;
+    }
+  },
+
+  guests: {
+    keywords: ['guest player','guest','pickup','pick up','pick-up','borrow','extra player','short players','fill roster'],
+    answer(div) {
+      return `<strong>Guest Players</strong>\n\n<span class="fl-tag">🌴 Florida / National USSSA Rules:</span>\n• <strong>Beginning of season → Dec 31:</strong> Unlimited guest players per event\n• <strong>Jan 1 → end of season:</strong> Max <strong>3 guest players</strong> per event (Majors = 6)\n• State Championships: Up to 3 guest players\n• World Series: Up to 3 guest players\n\n<strong>Key Rules:</strong>\n• Guest player must be on a current USSSA roster — no unrostered players\n• Guest player cannot be from a higher classification team (e.g., AAA/Major player cannot guest play for an AA team)\n• A player can only guest play for ONE team at a time per event\n• Application system closes <strong>3 hours before event start time</strong> (Eastern)\n• Guest players earned in a berth are NOT frozen — only permanent roster players freeze\n\n<span class="fl-tag">🌴 Florida-specific:</span>\n• Player guest playing must be DEACTIVATED on their full-time roster if both teams play the same week\n• Guest players must be added before midnight the night before the event\n\n<span class="rule-ref">Rule 3.06, Florida USSSA Roster Rules, Baseball Guest Player System</span>`;
+    }
+  },
+
+  eligibility: {
+    keywords: ['eligible','eligibility','age','born','birthday','overage','too old','grade','school','birth certificate','legal'],
+    answer(div) {
+      const ages = {
+        '10U': { cutoff: '11', gcutoff: '12', grade: '4th grade' },
+        '11U': { cutoff: '12', gcutoff: '13', grade: '5th grade' },
+        '12U': { cutoff: '13', gcutoff: '14', grade: '6th grade' },
+        '13U': { cutoff: '14', gcutoff: '15', grade: '7th grade' },
+      };
+      if (div && ages[div]) {
+        const a = ages[div];
+        return `<strong>Player Eligibility — ${div}</strong>\n\n• Players who turn <strong>${a.cutoff}</strong> before May 1 are NOT eligible unless they are in <strong>${a.grade}</strong>\n• Players turning <strong>${a.gcutoff}</strong> before August 1 are NOT eligible (no exception)\n\n<strong>Birth Certificate:</strong> Team manager must have a photocopy or digital copy at ALL times during tournaments. If protested and you can't produce it immediately → team loses game(s), ejected from tournament, last in standings.\n\n<strong>Grade Exceptions:</strong>\n• A player can use their grade to play in a younger division even if age-eligible for an older one\n• ⚠️ Starting 8/12/2026: Max <strong>3 grade exception players</strong> per team\n• Home-schooled players are NOT eligible for grade exceptions unless the school has a physical location\n\n<span class="rule-ref">Rules 3.01, 3.01.A, 3.01.B, 3.01.C</span>`;
+      }
+      return `<strong>Player Eligibility</strong>\n\n<strong>Age Cutoffs:</strong>\n• 10U: Can't turn 11 before May 1 (unless 4th grade); can't turn 12 before Aug 1\n• 11U: Can't turn 12 before May 1 (unless 5th grade); can't turn 13 before Aug 1\n• 12U: Can't turn 13 before May 1 (unless 6th grade); can't turn 14 before Aug 1\n• 13U: Can't turn 14 before May 1 (unless 7th grade); can't turn 15 before Aug 1\n\n<strong>Birth Certificate</strong> must be with the manager at all times during tournaments.\n\n<strong>Grade Exceptions:</strong> Starting 8/12/2026 — max 3 per team. Home-schooled players not eligible unless school has a physical location.\n\n<span class="rule-ref">Rules 3.01, 3.01.A, 3.01.B, 3.01.C</span>`;
+    }
+  },
+
+  grade: {
+    keywords: ['grade exception','grade','held back','redshirt','school grade','repeat'],
+    answer(div) {
+      return `<strong>Grade Exceptions</strong>\n\nA player can use their current school grade to play in a younger age division, even if their age would place them in an older one.\n\n<strong>Key rules:</strong>\n• ⚠️ Starting <strong>8/12/2026</strong>: Maximum <strong>3 grade exception players</strong> per team (all ages)\n• Player must provide: birth certificate + current report card, official school ID with grade, OR official government document stating the grade\n• <strong>Home-schooled players are NOT eligible</strong> for grade exceptions unless the school has a physical location where students attend classes (online-only schools do not qualify)\n\n<span class="rule-ref">Rules 3.01, 3.01.B, 3.01.C</span>`;
+    }
+  },
+
+  roster: {
+    keywords: ['roster','add player','remove player','drop player','online roster','paper roster','max players','how many players','register player'],
+    answer(div) {
+      return `<strong>Roster Rules</strong>\n\n<span class="fl-tag">🌴 Florida / National USSSA Rules:</span>\n• Players may only appear on <strong>ONE</strong> official online roster at a time\n• A player may only play for <strong>ONE team</strong> per day/event/tournament/week/weekend\n• All players must be on the online roster <strong>before the first game</strong>\n• Max roster size (10U–14U): <strong>25 players</strong>\n\n<span class="fl-tag">🌴 Florida-specific:</span>\n• <strong>Paper rosters are NOT accepted</strong> — must be online\n• New players requiring State Director approval: request must be submitted by <strong>5:00 PM Friday</strong> before the event (or 5:00 PM the day before if event starts before Friday)\n\n<span class="rule-ref">Rules 3.05.A, 3.05.B, 3.08.C, 4.08, Florida USSSA Roster Rules</span>`;
+    }
+  },
+
+  ejections: {
+    keywords: ['eject','ejection','thrown out','removed','suspension','suspended','banned'],
+    answer(div) {
+      return `<strong>Ejections & Suspensions</strong>\n\n<span class="fl-tag">🌴 Florida USSSA Rules:</span>\n• Any coach ejected or removed → <strong>suspended for the following game</strong>\n• <strong>Two ejections</strong> in the same tournament → suspended for the remainder of the tournament\n\n<span class="nat-tag">📋 National USSSA Rules:</span>\n• Ejected coaches/managers must <strong>immediately leave</strong> the vicinity of the playing field and grandstands for the remainder of that game\n• Players who are ejected must leave the field OR stay in the dugout — at the Tournament Director's discretion\n\n<span class="rule-ref">Rule 14.03, Florida USSSA State Rules</span>`;
+    }
+  },
+
+  protests: {
+    keywords: ['protest','dispute','challenge','illegal player','appeal','complain'],
+    answer(div) {
+      return `<strong>Protests</strong>\n\n<span class="fl-tag">🌴 Florida USSSA Rules:</span>\n• Protests must be made by the <strong>team manager only</strong> — not assistant coaches or spectators\n• Manager goes to the home plate umpire, announces the protest with <strong>$100 cash</strong>, and informs the umpire\n• Umpire gets the site director to handle it\n• Protests are for <strong>rule interpretations only</strong> — NOT judgment calls\n\n<span class="nat-tag">📋 National USSSA Rules:</span>\n• Protests allowed for: age violations, pitching violations, or rule interpretations\n• Must be declared before the next pitch following the dispute\n• $100 cash — returned only if the protest is upheld\n• If the disputed call ends the game → protest must be filed before umpires and team leave the field\n\n<span class="rule-ref">Rules 16.01, 16.02, Florida USSSA FAQ</span>`;
+    }
+  },
+
+  weather: {
+    keywords: ['refund','rain','weather','cancel','cancell','rained out','storm','money back'],
+    answer(div) {
+      return `<strong>Weather / Refund Policy</strong>\n\n<span class="fl-tag">🌴 Florida USSSA Rules (3-game guarantee events):</span>\n• 0 games played → <strong>100% full refund</strong> of entry fee\n• 1 game played or started → <strong>50% refund</strong>\n• 2 games played or started → <strong>No refund</strong>\n\n<em>Applies to ENTRY FEE only.</em>\n\n<span class="rule-ref">Florida USSSA Weather/Refund Policy</span>`;
+    }
+  },
+
+  ties: {
+    keywords: ['tie','tied','tiebreaker','tie breaker','extra inning','universal','overtime','tie game'],
+    answer(div) {
+      return `<strong>Tied Games</strong>\n\n<span class="fl-tag">🌴 Florida USSSA Rules:</span>\n• <strong>Pool play:</strong> Games CAN end in a tie\n• <strong>Bracket play:</strong> CANNOT end in a tie. At the end of the time limit or last inning (whichever comes first) → last batted out of the previous inning is placed on <strong>2nd base with NO OUTS</strong>. Play continues until there is a winner (Universal Tie-Breaker)\n\n<span class="nat-tag">📋 National USSSA Rules:</span>\n• Pool play games can end in a tie if the time limit is up or a complete game has been played\n• Bracket games continue until a winner is determined\n\n<strong>Pool Play Tiebreaker Order (standings):</strong>\n1. Winning % (highest)\n2. Number of wins (most)\n3. Number of losses (fewest)\n4. Head-to-head winning % (skip if more than 2 tied)\n5. Avg runs allowed (fewest)\n6. Avg run differential, max 8/game (highest)\n7. USSSA Points (most)\n8. Date team entered USSSA database\n9. Coin flip\n\n<span class="rule-ref">Rule 4.11, Rule 7.03.A.6, Florida USSSA State Rules</span>`;
+    }
+  },
+
+  catcher: {
+    keywords: ['catcher','catching','catching gear','protective gear','helmet','chest protector','shin guard','throat guard','cup'],
+    answer(div) {
+      return `<strong>Catcher Equipment Requirements</strong>\n\n<span class="fl-tag">🌴 Florida / National USSSA Rules (all ages):</span>\nCatcher must wear ALL of the following:\n• Helmet with facemask\n• Throat guard (built-in extended or separately attached)\n• Chest protector\n• Shin/leg guards\n• Protective cup\n\n⚠️ <strong>10U, 11U, 12U, 13U (14U and below):</strong> Catcher's helmet must fully cover <strong>BOTH ears</strong>.\n\n<span class="rule-ref">Rule 7.01.G</span>`;
+    }
+  },
+
+  classifications: {
+    keywords: ['classification','classify','major','aaa','aa',' a team','division level','class','reclassif'],
+    answer(div) {
+      return `<strong>Team Classifications</strong>\n\n<span class="fl-tag">🌴 Florida USSSA Classifications:</span>\n• <strong>Major:</strong> Top 10–15% of teams in the state. Best teams. Can compete with Major teams in the region.\n• <strong>AAA:</strong> Upper middle 30–35%. Traveling teams. Tryout teams.\n• <strong>AA:</strong> Lower middle 30–45%. Limited travel. Players from same local area.\n• <strong>A:</strong> Bottom 10–20%. School teams. Limited schedule. Local tournaments.\n• <strong>Drafted League:</strong> Teams formed from drafted leagues (Little League-style).\n\nTeams may be reclassified mid-season, typically around mid-June, by the Florida State Office or at any time by the USSSA National Baseball Committee.\n\n<em>Important: A player may NOT move to a lower classification team (same or younger age group) without State Director approval once rostered for the season.</em>\n\n<span class="rule-ref">Florida USSSA Classifications, Rule 3.05.C</span>`;
+    }
+  },
+
+  upplay: {
+    keywords: ['play up','older division','older team','age up','play older','up a year','2 years older'],
+    answer(div) {
+      return `<strong>Playing Up (Older Division)</strong>\n\nIn divisions <strong>4U–14U</strong>, a player can play on a team up to <strong>2 years older</strong> than their age division.\n\n<strong>Examples:</strong>\n• A 10U player → can play on 11U or 12U, but NOT 13U\n• An 11U player → can play on 12U or 13U, but NOT 14U\n\nA player's age division is their maximum restriction — they can always play in their own age group.\n\n<span class="rule-ref">Rule 3.08 (renumbered)</span>`;
+    }
+  },
+
+  lineup: {
+    keywords: ['lineup','batting order','dh','designated hitter','extra hitter','eh','continuous','substitut','sub '],
+    answer(div) {
+      return `<strong>Lineup Options</strong>\n\nTeams must declare their lineup format before the game — it cannot change mid-game.\n\n<span class="fl-tag">🌴 Florida / National USSSA Rules:</span>\nChoose one:\n• 9-player lineup\n• 9-player + Designated Hitter (DH)\n• 10-player with Extra Hitter (EH)\n• 10-player with both DH and EH\n• Continuous batting order (all present players bat)\n\n<strong>DH Notes:</strong> Permitted for ages 9U–14U. Can bat for any defensive player (not just the pitcher). The DH and the player being hit for are locked in the same batting slot — neither can move to another batting position.\n\n<strong>Minimum players to start:</strong> 8 players. The 9th spot in the order is an automatic out each inning. Players may be added to the bottom of the lineup as they arrive.\n\n<span class="rule-ref">Rules 7.02.D.1, 7.02.E, 7.02.G, Florida State Rules</span>`;
+    }
+  },
+
+  noshift: {
+    keywords: ['shift','no shift','infield shift','positioning','two on each side'],
+    answer(div) {
+      return `<strong>No-Shift Rule</strong>\n\nUSSA has adopted the <strong>MLB no-shift rule</strong>. All four infielders must be positioned on the infield dirt, with two on each side of second base when the pitch is thrown.\n\n<span class="rule-ref">Rule 7.02.I</span>`;
+    }
+  },
+
+  intentionalwalk: {
+    keywords: ['intentional walk','ibb','free pass','walk','four balls'],
+    answer(div) {
+      return `<strong>Intentional Walk</strong>\n\nAn intentional walk can be issued by <strong>announcement only</strong> — the pitcher or catcher simply announces it. No pitches need to be thrown.\n\n<span class="rule-ref">Rule 7.04.A</span>`;
+    }
+  },
+
+  helmets: {
+    keywords: ['batting helmet','helmet','ear flap','ear guard','head gear'],
+    answer(div) {
+      return `<strong>Batting Helmets</strong>\n\nAll offensive players must wear a <strong>double ear-flap batting helmet</strong> whenever:\n• At bat\n• In the on-deck circle\n• On base\n• Any time outside the dugout when the ball is live\n\n<span class="rule-ref">Rule 7.01.H</span>`;
+    }
+  },
+
+};
+
+// ─── MATCH FUNCTION ────────────────────────────────────────────────────────────
+function findRule(query) {
+  const q = query.toLowerCase();
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const [key, rule] of Object.entries(RULES)) {
+    let score = 0;
+    for (const kw of rule.keywords) {
+      if (q.includes(kw)) score += kw.length; // longer keyword matches = more specific
+    }
+    if (score > bestScore) { bestScore = score; bestMatch = key; }
+  }
+  return bestScore > 0 ? bestMatch : null;
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+function selectDivision(d) {
+  division = d;
+  fieldConfig = null;
+  document.querySelectorAll('.pill-btn').forEach(b => {
+    if (['10U','11U','12U','13U'].includes(b.textContent)) b.classList.remove('active');
+  });
+  document.querySelectorAll('.pill-btn').forEach(b => {
+    if (b.textContent === d) b.classList.add('active');
+  });
+  document.getElementById('config-row').style.display = d === '13U' ? 'flex' : 'none';
+  document.getElementById('msg-input').placeholder = `Ask a ${d} rules question...`;
+  updateSendBtn();
+}
+
+function clearDivision() {
+  division = null; fieldConfig = null;
+  document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('config-row').style.display = 'none';
+  document.getElementById('msg-input').placeholder = 'Select a division above, then ask your question...';
+  updateSendBtn();
+}
+
+function selectConfig(c) {
+  fieldConfig = fieldConfig === c ? null : c;
+  document.querySelectorAll('#config-row .pill-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === fieldConfig);
+  });
+  // If we were waiting for config, re-run the pending query
+  if (awaitingConfig && pendingQuery) {
+    awaitingConfig = false;
+    const q = pendingQuery;
+    pendingQuery = null;
+    processQuery(q);
+  }
+}
+
+function updateSendBtn() {
+  const btn = document.getElementById('send-btn');
+  const val = document.getElementById('msg-input').value.trim();
+  btn.disabled = !val;
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  updateSendBtn();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+}
+
+function scrollBottom() {
+  const chat = document.getElementById('chat');
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addBubble(html, isUser) {
+  const chat = document.getElementById('chat');
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap' + (isUser ? ' user' : '');
+
+  if (!isUser) {
+    const av = document.createElement('div');
+    av.className = 'avatar'; av.textContent = '⚾';
+    wrap.appendChild(av);
+  }
+
+  const bub = document.createElement('div');
+  bub.className = 'bubble ' + (isUser ? 'user' : 'bot');
+  bub.innerHTML = html;
+  wrap.appendChild(bub);
+  chat.appendChild(wrap);
+  scrollBottom();
+}
+
+function addConfigChoice() {
+  const chat = document.getElementById('chat');
+  const row = document.createElement('div');
+  row.className = 'config-choice';
+  row.id = 'config-choice-row';
+  ['54/80','60/90'].forEach(c => {
+    const btn = document.createElement('button');
+    btn.textContent = c + ' Configuration';
+    btn.onclick = () => {
+      selectConfig(c);
+      row.remove();
+    };
+    row.appendChild(btn);
+  });
+  chat.appendChild(row);
+  scrollBottom();
+}
+
+// ─── QUERY PROCESSOR ──────────────────────────────────────────────────────────
+function processQuery(query) {
+  const key = findRule(query);
+
+  if (!key) {
+    addBubble(`I didn't find a specific rule matching that question. Try one of the quick topic buttons above, or visit <a href="https://flbaseball.usssa.com" target="_blank" style="color:#c8a84b;">flbaseball.usssa.com</a> for the full rules.`, false);
+    return;
+  }
+
+  const rule = RULES[key];
+
+  // Check if 13U dimension question needs config
+  if (key === 'dimensions' && division === '13U' && !fieldConfig) {
+    addBubble(`For 13U field dimension questions, I need to know your event's field configuration. Which does your event use?`, false);
+    addConfigChoice();
+    awaitingConfig = true;
+    pendingQuery = query;
+    return;
+  }
+
+  const answer = rule.answer(division, fieldConfig);
+  if (answer === '__NEEDS_CONFIG__') {
+    addBubble(`For 13U field dimension questions, I need to know your event's field configuration. Which does your event use?`, false);
+    addConfigChoice();
+    awaitingConfig = true;
+    pendingQuery = query;
+    return;
+  }
+
+  addBubble(answer + `\n\n<em style="color:#4a6a8a;font-size:12px;">Always verify edge cases with your Tournament Director.</em>`, false);
+}
+
+// ─── SEND ─────────────────────────────────────────────────────────────────────
+function handleSend() {
+  const input = document.getElementById('msg-input');
+  const query = input.value.trim();
+  if (!query) return;
+
+  addBubble(query, true);
+  input.value = '';
+  input.style.height = 'auto';
+  updateSendBtn();
+  processQuery(query);
+}
+
+function quickAsk(topic) {
+  addBubble(topic, true);
+  processQuery(topic);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  addBubble(`Hey there! 👋 I'm your Florida USSSA Baseball rules assistant for 10U, 11U, 12U, and 13U divisions.\n\nTap a <strong>quick topic</strong> above, or select your division and type a question below.\n\nWhat do you need to know?`, false);
+  document.getElementById('msg-input').addEventListener('input', updateSendBtn);
+};
+</script>
+</body>
+</html>
